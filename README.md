@@ -1,5 +1,7 @@
 # Task Management API
 
+![CI](https://github.com/joy-1225/TaskManagement/actions/workflows/ci.yml/badge.svg)
+
 A production-grade RESTful Task Management API built with Node.js, Express, Prisma, and MySQL. It allows users to seamlessly create, read, update, complete, and delete tasks with comprehensive input validation, dynamic sorting, filtering, and pagination capabilities.
 
 ## Tech Stack
