@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const ApiError = require('../utils/ApiError');
+const asyncHandler = require('../utils/asyncHandler');
 
 const formatTask = (task) => ({
   ...task,
@@ -50,24 +51,20 @@ const formatTask = (task) => ({
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-const createTask = async (req, res, next) => {
-  try {
-    const { title, description, category, due_date } = req.body;
+const createTask = asyncHandler(async (req, res) => {
+  const { title, description, category, due_date } = req.body;
 
-    const task = await prisma.task.create({
-      data: {
-        title,
-        description,
-        category,
-        due_date: due_date ? new Date(due_date) : undefined,
-      },
-    });
+  const task = await prisma.task.create({
+    data: {
+      title,
+      description,
+      category,
+      due_date: due_date ? new Date(due_date) : undefined,
+    },
+  });
 
-    return res.status(201).json({ success: true, data: formatTask(task) });
-  } catch (err) {
-    next(err);
-  }
-};
+  return res.status(201).json({ success: true, data: formatTask(task) });
+});
 
 // ─── GET /tasks ──────────────────────────────────────────────────────────────
 /**
@@ -122,60 +119,56 @@ const createTask = async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/TaskListResponse'
  */
-const getAllTasks = async (req, res, next) => {
-  try {
-    const {
-      status,
-      category,
-      sortBy = 'created_at',
-      order = 'desc',
-      page = '1',
-      limit = '10',
-    } = req.query;
+const getAllTasks = asyncHandler(async (req, res) => {
+  const {
+    status,
+    category,
+    sortBy = 'created_at',
+    order = 'desc',
+    page = '1',
+    limit = '10',
+  } = req.query;
 
-    const allowedStatuses = ['pending', 'completed'];
-    if (status && !allowedStatuses.includes(status)) {
-      throw new ApiError(400, "Invalid status. Must be 'pending' or 'completed'.");
-    }
-
-    // Build dynamic where clause
-    const where = {};
-    if (status) where.status = status;
-    if (category) where.category = { contains: category };
-
-    // Whitelist sortable fields to prevent injection
-    const allowedSortFields = ['created_at', 'due_date', 'title', 'status'];
-    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
-    const sortOrder = order === 'asc' ? 'asc' : 'desc';
-
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
-    const skip = (pageNum - 1) * limitNum;
-
-    const [total, tasks] = await Promise.all([
-      prisma.task.count({ where }),
-      prisma.task.findMany({
-        where,
-        orderBy: { [sortField]: sortOrder },
-        skip,
-        take: limitNum,
-      }),
-    ]);
-
-    return res.status(200).json({
-      success: true,
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
-      },
-      data: tasks.map(formatTask),
-    });
-  } catch (err) {
-    next(err);
+  const allowedStatuses = ['pending', 'completed'];
+  if (status && !allowedStatuses.includes(status)) {
+    throw new ApiError(400, "Invalid status. Must be 'pending' or 'completed'.");
   }
-};
+
+  // Build dynamic where clause
+  const where = {};
+  if (status) where.status = status;
+  if (category) where.category = { contains: category };
+
+  // Whitelist sortable fields to prevent injection
+  const allowedSortFields = ['created_at', 'due_date', 'title', 'status'];
+  const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'created_at';
+  const sortOrder = order === 'asc' ? 'asc' : 'desc';
+
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
+  const skip = (pageNum - 1) * limitNum;
+
+  const [total, tasks] = await Promise.all([
+    prisma.task.count({ where }),
+    prisma.task.findMany({
+      where,
+      orderBy: { [sortField]: sortOrder },
+      skip,
+      take: limitNum,
+    }),
+  ]);
+
+  return res.status(200).json({
+    success: true,
+    pagination: {
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
+    },
+    data: tasks.map(formatTask),
+  });
+});
 
 // ─── GET /tasks/:id ───────────────────────────────────────────────────────────
 /**
@@ -205,25 +198,21 @@ const getAllTasks = async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-const getTaskById = async (req, res, next) => {
-  try {
-    const id = parseInt(req.params.id, 10);
+const getTaskById = asyncHandler(async (req, res) => {
+  const id = parseInt(req.params.id, 10);
 
-    if (isNaN(id) || id < 1 || id > 2147483647) {
-      throw new ApiError(400, 'Invalid task ID.');
-    }
-
-    const task = await prisma.task.findUnique({ where: { id } });
-
-    if (!task) {
-      throw new ApiError(404, `Task with id ${id} not found.`);
-    }
-
-    return res.status(200).json({ success: true, data: formatTask(task) });
-  } catch (err) {
-    next(err);
+  if (isNaN(id) || id < 1 || id > 2147483647) {
+    throw new ApiError(400, 'Invalid task ID.');
   }
-};
+
+  const task = await prisma.task.findUnique({ where: { id } });
+
+  if (!task) {
+    throw new ApiError(404, `Task with id ${id} not found.`);
+  }
+
+  return res.status(200).json({ success: true, data: formatTask(task) });
+});
 
 // ─── PUT /tasks/:id ───────────────────────────────────────────────────────────
 /**
@@ -267,37 +256,33 @@ const getTaskById = async (req, res, next) => {
  *       404:
  *         description: Task not found
  */
-const updateTask = async (req, res, next) => {
-  try {
-    const id = parseInt(req.params.id, 10);
+const updateTask = asyncHandler(async (req, res) => {
+  const id = parseInt(req.params.id, 10);
 
-    if (isNaN(id) || id < 1 || id > 2147483647) {
-      throw new ApiError(400, 'Invalid task ID.');
-    }
-
-    const { title, description, category, due_date } = req.body;
-
-    // Fetch existing task first
-    const existingTask = await prisma.task.findUnique({ where: { id } });
-
-    if (!existingTask) {
-      throw new ApiError(404, `Task with id ${id} not found.`);
-    }
-
-    // Merge new values with existing ones
-    const mergedData = {
-      title: title !== undefined ? title : existingTask.title,
-      description: description !== undefined ? description : existingTask.description,
-      category: category !== undefined ? category : existingTask.category,
-      due_date: due_date !== undefined ? new Date(due_date) : existingTask.due_date,
-    };
-
-    const task = await prisma.task.update({ where: { id }, data: mergedData });
-    return res.status(200).json({ success: true, data: formatTask(task) });
-  } catch (err) {
-    next(err);
+  if (isNaN(id) || id < 1 || id > 2147483647) {
+    throw new ApiError(400, 'Invalid task ID.');
   }
-};
+
+  const { title, description, category, due_date } = req.body;
+
+  // Fetch existing task first
+  const existingTask = await prisma.task.findUnique({ where: { id } });
+
+  if (!existingTask) {
+    throw new ApiError(404, `Task with id ${id} not found.`);
+  }
+
+  // Merge new values with existing ones
+  const mergedData = {
+    title: title !== undefined ? title : existingTask.title,
+    description: description !== undefined ? description : existingTask.description,
+    category: category !== undefined ? category : existingTask.category,
+    due_date: due_date !== undefined ? new Date(due_date) : existingTask.due_date,
+  };
+
+  const task = await prisma.task.update({ where: { id }, data: mergedData });
+  return res.status(200).json({ success: true, data: formatTask(task) });
+});
 
 // ─── PATCH /tasks/:id/complete ────────────────────────────────────────────────
 /**
@@ -325,34 +310,30 @@ const updateTask = async (req, res, next) => {
  *       404:
  *         description: Task not found
  */
-const completeTask = async (req, res, next) => {
-  try {
-    const id = parseInt(req.params.id, 10);
+const completeTask = asyncHandler(async (req, res) => {
+  const id = parseInt(req.params.id, 10);
 
-    if (isNaN(id) || id < 1 || id > 2147483647) {
-      throw new ApiError(400, 'Invalid task ID.');
-    }
-
-    const task = await prisma.task.findUnique({ where: { id } });
-
-    if (!task) {
-      throw new ApiError(404, `Task with id ${id} not found.`);
-    }
-
-    if (task.status === 'completed') {
-      throw new ApiError(400, 'Task is already marked as completed.');
-    }
-
-    const updated = await prisma.task.update({
-      where: { id },
-      data: { status: 'completed' },
-    });
-
-    return res.status(200).json({ success: true, data: formatTask(updated) });
-  } catch (err) {
-    next(err);
+  if (isNaN(id) || id < 1 || id > 2147483647) {
+    throw new ApiError(400, 'Invalid task ID.');
   }
-};
+
+  const task = await prisma.task.findUnique({ where: { id } });
+
+  if (!task) {
+    throw new ApiError(404, `Task with id ${id} not found.`);
+  }
+
+  if (task.status === 'completed') {
+    throw new ApiError(400, 'Task is already marked as completed.');
+  }
+
+  const updated = await prisma.task.update({
+    where: { id },
+    data: { status: 'completed' },
+  });
+
+  return res.status(200).json({ success: true, data: formatTask(updated) });
+});
 
 // ─── DELETE /tasks/:id ────────────────────────────────────────────────────────
 /**
@@ -383,26 +364,22 @@ const completeTask = async (req, res, next) => {
  *       404:
  *         description: Task not found
  */
-const deleteTask = async (req, res, next) => {
-  try {
-    const id = parseInt(req.params.id, 10);
+const deleteTask = asyncHandler(async (req, res) => {
+  const id = parseInt(req.params.id, 10);
 
-    if (isNaN(id) || id < 1 || id > 2147483647) {
-      throw new ApiError(400, 'Invalid task ID.');
-    }
-
-    try {
-      await prisma.task.delete({ where: { id } });
-      return res.status(200).json({ success: true, message: 'Task deleted successfully.' });
-    } catch (prismaErr) {
-      if (prismaErr.code === 'P2025') {
-        throw new ApiError(404, `Task with id ${id} not found.`);
-      }
-      throw prismaErr;
-    }
-  } catch (err) {
-    next(err);
+  if (isNaN(id) || id < 1 || id > 2147483647) {
+    throw new ApiError(400, 'Invalid task ID.');
   }
-};
+
+  try {
+    await prisma.task.delete({ where: { id } });
+    return res.status(200).json({ success: true, message: 'Task deleted successfully.' });
+  } catch (prismaErr) {
+    if (prismaErr.code === 'P2025') {
+      throw new ApiError(404, `Task with id ${id} not found.`);
+    }
+    throw prismaErr;
+  }
+});
 
 module.exports = { createTask, getAllTasks, getTaskById, updateTask, completeTask, deleteTask };

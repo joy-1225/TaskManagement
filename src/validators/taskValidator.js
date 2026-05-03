@@ -12,7 +12,7 @@ const createTaskSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'due_date must be in YYYY-MM-DD format.')
     .refine((val) => !isNaN(new Date(val).getTime()), 'due_date must be a valid calendar date.')
     .optional(),
-});
+}).strict();
 
 const updateTaskSchema = z
   .object({
@@ -24,7 +24,7 @@ const updateTaskSchema = z
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'due_date must be in YYYY-MM-DD format.')
       .refine((val) => !isNaN(new Date(val).getTime()), 'due_date must be a valid calendar date.')
       .optional(),
-  })
+  }).strict()
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one field must be provided for update.',
   });
