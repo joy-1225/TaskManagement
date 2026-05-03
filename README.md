@@ -2,7 +2,19 @@
 
 ![CI](https://github.com/joy-1225/TaskManagement/actions/workflows/ci.yml/badge.svg)
 
-A production-grade RESTful Task Management API built with Node.js, Express, Prisma, and MySQL. It allows users to seamlessly create, read, update, complete, and delete tasks with comprehensive input validation, dynamic sorting, filtering, and pagination capabilities.
+A RESTful Task Management API built with Node.js, Express, Prisma, and MySQL. It allows users to create, read, update, complete, and delete tasks with input validation, filtering, sorting, and pagination.
+
+## Table of Contents
+- [Tech Stack](#tech-stack)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [API Documentation](#api-documentation)
+- [Running Tests](#running-tests)
+- [Docker](#docker)
+- [Architecture Decisions](#architecture-decisions)
 
 ## Tech Stack
 
@@ -26,12 +38,12 @@ A production-grade RESTful Task Management API built with Node.js, Express, Pris
 - Robust filtering of tasks by `status` and `category`.
 - Dynamic sorting by `created_at`, `due_date`, or `title` in `asc` or `desc` order.
 - Dedicated `PATCH /api/v1/tasks/:id/complete` endpoint to securely mark tasks as completed.
-- Strict request body validation producing precise, developer-friendly error messages using Zod.
-- Centralized global error handling ensuring consistent JSON error responses across the entire API.
+- Request body validation with clear error messages using Zod.
+- Global error handling with consistent JSON responses.
 - Fully interactive API documentation served automatically via Swagger UI.
 - Containerized development and deployment pipeline using Docker and Docker Compose.
 - Automated CI/CD testing pipeline configured via GitHub Actions.
-- Comprehensive integration test suite built with Jest and Supertest.
+- Integration test suite built with Jest and Supertest.
 
 ## Project Structure
 
@@ -147,8 +159,8 @@ The compose file sets up two services: a MySQL 8.0 database container and the No
 
 ## Architecture Decisions
 
-- **Node.js + Express:** Provides a fast, unopinionated, and highly scalable foundation for building RESTful APIs using JavaScript.
-- **MySQL:** Selected for its robust relational data model, ensuring structured storage, data integrity, and reliable performance for predictable task records.
+- **Node.js + Express:** Provides a fast, unopinionated foundation for building RESTful APIs using JavaScript.
+- **MySQL:** Selected for its relational data model, ensuring structured storage, data integrity, and reliable performance for predictable task records.
 - **Prisma:** Used as the ORM to provide full type safety, a clear schema-first database design, and automated version-controlled migrations.
-- **Zod:** Implemented at the API boundary to guarantee strict request validation, producing clean error messages and preventing malformed data from reaching the controllers.
-- **Swagger:** Integrates living, interactive API documentation directly into the project, offering a professional interface for developers to explore and test endpoints without external HTTP clients.
+- **Zod:** Implemented at the API boundary to provide strict request validation, producing clean error messages and preventing malformed data from reaching the controllers.
+- **Swagger:** Integrates interactive API documentation directly into the project, offering a professional interface for developers to explore and test endpoints without external HTTP clients.
