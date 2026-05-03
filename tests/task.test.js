@@ -54,6 +54,17 @@ describe('POST /api/v1/tasks', () => {
     expect(res.body.success).toBe(false);
     expect(res.body.message).toBe('Validation failed.');
   });
+
+  it('should return 400 if due_date is an invalid calendar date', async () => {
+    const res = await request(app).post('/api/v1/tasks').send({
+      title: 'Invalid Date Task',
+      due_date: '2026-13-45', // Month 13, Day 45
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('Validation failed.');
+  });
 });
 
 // ─── GET /tasks ───────────────────────────────────────────────────────────────

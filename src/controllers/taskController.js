@@ -133,6 +133,11 @@ const getAllTasks = async (req, res, next) => {
       limit = '10',
     } = req.query;
 
+    const allowedStatuses = ['pending', 'completed'];
+    if (status && !allowedStatuses.includes(status)) {
+      throw new ApiError(400, "Invalid status. Must be 'pending' or 'completed'.");
+    }
+
     // Build dynamic where clause
     const where = {};
     if (status) where.status = status;
@@ -204,7 +209,7 @@ const getTaskById = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
 
-    if (isNaN(id)) {
+    if (isNaN(id) || id < 1 || id > 2147483647) {
       throw new ApiError(400, 'Invalid task ID.');
     }
 
@@ -266,7 +271,7 @@ const updateTask = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
 
-    if (isNaN(id)) {
+    if (isNaN(id) || id < 1 || id > 2147483647) {
       throw new ApiError(400, 'Invalid task ID.');
     }
 
@@ -274,7 +279,7 @@ const updateTask = async (req, res, next) => {
 
     // Fetch existing task first
     const existingTask = await prisma.task.findUnique({ where: { id } });
-    
+
     if (!existingTask) {
       throw new ApiError(404, `Task with id ${id} not found.`);
     }
@@ -324,7 +329,7 @@ const completeTask = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
 
-    if (isNaN(id)) {
+    if (isNaN(id) || id < 1 || id > 2147483647) {
       throw new ApiError(400, 'Invalid task ID.');
     }
 
@@ -382,7 +387,7 @@ const deleteTask = async (req, res, next) => {
   try {
     const id = parseInt(req.params.id, 10);
 
-    if (isNaN(id)) {
+    if (isNaN(id) || id < 1 || id > 2147483647) {
       throw new ApiError(400, 'Invalid task ID.');
     }
 

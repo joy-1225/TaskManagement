@@ -1,9 +1,5 @@
 const { ZodError } = require('zod');
 
-/**
- * Middleware factory that validates req.body against a given Zod schema.
- * @param {import('zod').ZodSchema} schema
- */
 const validate = (schema) => (req, res, next) => {
   try {
     schema.parse(req.body);
@@ -13,10 +9,10 @@ const validate = (schema) => (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'Validation failed.',
-        errors: err.errors ? err.errors.map((e) => ({
-          field: e.path.join('.'),
-          message: e.message,
-        })) : [{ message: err.message || 'Invalid input data' }],
+        errors: (err.errors || err.issues || []).map(e => ({
+          field: (e.path && e.path.length > 0) ? e.path.join('.') : 'unknown',
+          message: e.message
+        }))
       });
     }
     next(err);
