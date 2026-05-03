@@ -1,213 +1,152 @@
-# Task Management REST API
+# Task Management API
 
-A **production-grade RESTful Task Management API** built with Node.js, Express.js, Prisma, and MySQL.
-Built for the Chaintech on-campus internship drive at LJ University.
-
-**Author:** Joy Patel
-
----
-
-## Features
-
-- ✅ Full **CRUD** operations on tasks
-- ✅ **Zod** schema validation with structured error responses
-- ✅ **Filtering** by `status` and `category`
-- ✅ **Sorting** by `created_at`, `due_date`, or `title` (asc/desc)
-- ✅ **Pagination** via `page` and `limit` query params
-- ✅ Bonus fields: `due_date` and `category`
-- ✅ `PATCH /tasks/:id/complete` — rejects already-completed tasks with `400`
-- ✅ **Prisma ORM** — type-safe queries, trackable migrations
-- ✅ **Global error handler** + custom `ApiError` class
-- ✅ **Swagger UI** at `/api-docs` — interactive API docs
-- ✅ **Jest + Supertest** — full API test coverage (13 test cases)
-- ✅ **Docker + docker-compose** — one-command setup
-- ✅ **GitHub Actions CI** — auto-runs tests on every push to `main`
-- ✅ Health check endpoint at `/health`
-
----
+A production-grade RESTful Task Management API built with Node.js, Express, Prisma, and MySQL. It allows users to seamlessly create, read, update, complete, and delete tasks with comprehensive input validation, dynamic sorting, filtering, and pagination capabilities.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js v20 LTS |
-| Framework | Express.js |
-| Database | MySQL 8.0 |
-| ORM | Prisma |
-| Validation | Zod |
-| Testing | Jest + Supertest |
-| API Docs | Swagger (swagger-ui-express + swagger-jsdoc) |
-| Environment | dotenv |
-| Dev Tools | Nodemon |
-| Containerization | Docker + docker-compose |
-| CI/CD | GitHub Actions |
+| Layer | Technology | Purpose |
+| --- | --- | --- |
+| Runtime | Node.js | Execution environment |
+| Web Framework | Express | Routing and HTTP server |
+| Database | MySQL | Relational data storage |
+| ORM | Prisma | Type-safe database queries and migrations |
+| Validation | Zod | Request body schema validation |
+| Documentation | Swagger | Interactive API documentation (`swagger-jsdoc`, `swagger-ui-express`) |
+| Environment | dotenv | Managing environment variables |
+| Testing | Jest & Supertest | Unit and integration testing |
+| Development | Nodemon | Hot-reloading development server |
 
----
+## Features
+
+- Full CRUD operations (Create, Read, Update, Delete) on tasks.
+- Support for bonus task fields: `due_date` and `category`.
+- Pagination implemented natively via `page` and `limit` query parameters.
+- Robust filtering of tasks by `status` and `category`.
+- Dynamic sorting by `created_at`, `due_date`, or `title` in `asc` or `desc` order.
+- Dedicated `PATCH /api/v1/tasks/:id/complete` endpoint to securely mark tasks as completed.
+- Strict request body validation producing precise, developer-friendly error messages using Zod.
+- Centralized global error handling ensuring consistent JSON error responses across the entire API.
+- Fully interactive API documentation served automatically via Swagger UI.
+- Containerized development and deployment pipeline using Docker and Docker Compose.
+- Automated CI/CD testing pipeline configured via GitHub Actions.
+- Comprehensive integration test suite built with Jest and Supertest.
+
+## Project Structure
+
+```text
+chaintech-task-api/
+├── .github/
+│   └── workflows/
+│       └── ci.yml             # GitHub Actions CI pipeline configuration
+├── prisma/
+│   ├── migrations/            # Auto-generated database migration files
+│   └── schema.prisma          # Database schema and model definitions
+├── src/
+│   ├── config/
+│   │   └── prisma.js          # Prisma Client initialization
+│   ├── controllers/
+│   │   └── taskController.js  # Core logic and database interactions for tasks
+│   ├── middlewares/
+│   │   ├── errorHandler.js    # Global error handling middleware
+│   │   └── validate.js        # Zod validation middleware factory
+│   ├── routes/
+│   │   └── taskRoutes.js      # Express router and Swagger schema definitions
+│   ├── utils/
+│   │   └── ApiError.js        # Custom error class for standardizing HTTP errors
+│   ├── validators/
+│   │   └── taskValidator.js   # Zod schemas for task creation and updates
+│   └── app.js                 # Express application setup
+├── tests/
+│   └── task.test.js           # Integration tests using Jest and Supertest
+├── .env.example               # Template for environment variables
+├── .gitignore                 # Files and folders to ignore in Git
+├── docker-compose.yml         # Docker Compose configuration for app and DB
+├── Dockerfile                 # Multi-stage Docker build instructions
+├── package-lock.json          # Dependency lockfile
+├── package.json               # Project metadata and npm scripts
+└── server.js                  # Application entry point
+```
 
 ## Prerequisites
 
 - Node.js v20+
-- MySQL 8.0 (or Docker)
+- Docker Desktop (for MySQL)
 - Git
 
----
+## Getting Started
 
-## Installation (Standard)
-
+**Step 1:** Clone the repo
 ```bash
-# 1. Clone the repo
-git clone https://github.com/joy-1225/chaintech-task-api.git
-cd chaintech-task-api
+git clone https://github.com/joy-1225/TaskManagement.git
+cd TaskManagement
+```
 
-# 2. Install dependencies
+**Step 2:** Install dependencies
+```bash
 npm install
+```
 
-# 3. Set up environment variables
+**Step 3:** Copy `.env.example` to `.env` and fill in values
+```bash
 cp .env.example .env
-# Edit .env and fill in your DATABASE_URL
+```
 
-# 4. Run the first migration (creates the tasks table)
+**Step 4:** Start MySQL with Docker
+```bash
+docker-compose up -d db
+```
+
+**Step 5:** Run migration
+```bash
 npx prisma migrate dev --name init
+```
 
-# 5. Start the development server
+**Step 6:** Start server
+```bash
 npm run dev
 ```
 
----
+## Environment Variables
 
-## Installation (Docker — one command)
-
-```bash
-docker-compose up --build
-```
-
-This starts both the MySQL container and the API server. No local MySQL installation needed.
-
----
-
-## Environment Variables (.env.example)
-
-Create a `.env` file in the root directory. It should look like this:
-
-```env
-DATABASE_URL="mysql://root:YOUR_PASSWORD@localhost:3306/taskdb"
-PORT=3000
-JWT_SECRET=your_secret_key_here
-NODE_ENV=development
-```
-
----
-
-## API Endpoints
-
-### Base URL: `http://localhost:3000/api/v1`
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/tasks` | Create a new task |
-| `GET` | `/tasks` | Get all tasks (filtering, sorting, pagination) |
-| `GET` | `/tasks/:id` | Get a single task by ID |
-| `PUT` | `/tasks/:id` | Update task details |
-| `PATCH` | `/tasks/:id/complete` | Mark a task as completed |
-| `DELETE` | `/tasks/:id` | Delete a task |
-
-### Query Parameters for `GET /tasks`
-
-| Param | Type | Example | Description |
-|---|---|---|---|
-| `status` | string | `pending` / `completed` | Filter by status |
-| `category` | string | `Work` | Filter by category |
-| `sortBy` | string | `due_date` / `created_at` | Sort field |
-| `order` | string | `asc` / `desc` | Sort direction |
-| `page` | number | `1` | Page number (default: 1) |
-| `limit` | number | `10` | Items per page (default: 10) |
-
-**Example:**
-```
-GET /api/v1/tasks?status=pending&category=Work&sortBy=due_date&order=asc&page=1&limit=5
-```
-
----
+| Variable | Description | Example Value |
+| --- | --- | --- |
+| `DATABASE_URL` | MySQL connection string | `mysql://root:YOUR_PASSWORD@localhost:3306/taskdb` |
+| `PORT` | The port the Express server runs on | `3000` |
+| `NODE_ENV` | Application environment | `development` |
 
 ## API Documentation
 
-Interactive Swagger UI is available at:
+Interactive Swagger documentation is available at `http://localhost:3000/api-docs` when the server is running.
 
-```
-http://localhost:3000/api-docs
-```
-
-Raw OpenAPI JSON spec:
-```
-http://localhost:3000/api-docs.json
-```
-
----
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `POST` | `/api/v1/tasks` | Create a new task |
+| `GET` | `/api/v1/tasks` | Get all tasks with optional filtering, sorting, and pagination |
+| `GET` | `/api/v1/tasks/:id` | Get a single task by ID |
+| `PUT` | `/api/v1/tasks/:id` | Update task details |
+| `PATCH` | `/api/v1/tasks/:id/complete` | Mark a task as completed |
+| `DELETE` | `/api/v1/tasks/:id` | Delete a task |
 
 ## Running Tests
 
 ```bash
 npm test
 ```
+Runs the Jest test suite covering all API endpoints, including valid operations, missing required fields, invalid data submissions, and not-found entity scenarios.
 
-Runs 13 test cases covering all endpoints including edge cases (missing title, already-completed task, non-existent IDs).
+## Docker
 
-> **Note:** Ensure your `DATABASE_URL` in `.env` points to a running MySQL instance before running tests.
+You can run the entire application stack using Docker Compose:
 
----
-
-## Available Scripts
-
-| Script | Command | Description |
-|---|---|---|
-| `npm start` | `node server.js` | Start production server |
-| `npm run dev` | `nodemon server.js` | Start dev server with hot reload |
-| `npm test` | `jest --forceExit --detectOpenHandles` | Run all tests |
-| `npm run migrate` | `prisma migrate dev` | Run a new DB migration |
-| `npm run studio` | `prisma studio` | Open Prisma Studio (DB GUI) |
-
----
-
-## Project Structure
-
+```bash
+docker-compose up --build -d
 ```
-chaintech-task-api/
-├── prisma/
-│   └── schema.prisma            # Prisma schema — Task model + Status enum
-├── src/
-│   ├── config/
-│   │   └── prisma.js            # Prisma Client singleton
-│   ├── controllers/
-│   │   └── taskController.js    # Request handlers (with Swagger JSDoc)
-│   ├── routes/
-│   │   └── taskRoutes.js        # Express router + Swagger component schemas
-│   ├── middlewares/
-│   │   ├── validate.js          # Zod validation middleware factory
-│   │   └── errorHandler.js      # Global error handler
-│   ├── validators/
-│   │   └── taskValidator.js     # Zod schemas for create/update
-│   ├── utils/
-│   │   └── ApiError.js          # Custom error class with HTTP status code
-│   └── app.js                   # Express app (middlewares, routes, Swagger)
-├── tests/
-│   └── task.test.js             # Jest + Supertest — 13 test cases
-├── .github/
-│   └── workflows/
-│       └── ci.yml               # GitHub Actions CI pipeline
-├── .env.example                 # Environment variable template
-├── .gitignore
-├── Dockerfile                   # Multi-stage production Docker build
-├── docker-compose.yml           # App + MySQL services
-├── server.js                    # Entry point — DB connect → HTTP listen
-└── package.json
-```
-
----
+The compose file sets up two services: a MySQL 8.0 database container and the Node.js API container. It automatically links the database to the API via an internal Docker network, fully containerizing both the application and its dependencies.
 
 ## Architecture Decisions
 
-- **MySQL** — Fixed relational schema with a well-defined `tasks` table; ideal for structured task data with status transitions.
-- **Prisma** — Auto-generates a fully type-safe client from `schema.prisma`. Migrations are version-controlled. The schema file is the single source of truth for the database.
-- **Zod** — Schema-based, type-safe validation at the boundary layer. Produces structured, field-level error messages rather than opaque 500s.
-- **Global Error Handler** — All controllers delegate errors via `next(err)`, ensuring a single consistent JSON error format across the entire API.
-- **Docker multi-stage build** — Builder stage generates the Prisma client; production stage copies only the compiled artifacts, keeping the final image lean.
+- **Node.js + Express:** Provides a fast, unopinionated, and highly scalable foundation for building RESTful APIs using JavaScript.
+- **MySQL:** Selected for its robust relational data model, ensuring structured storage, data integrity, and reliable performance for predictable task records.
+- **Prisma:** Used as the ORM to provide full type safety, a clear schema-first database design, and automated version-controlled migrations.
+- **Zod:** Implemented at the API boundary to guarantee strict request validation, producing clean error messages and preventing malformed data from reaching the controllers.
+- **Swagger:** Integrates living, interactive API documentation directly into the project, offering a professional interface for developers to explore and test endpoints without external HTTP clients.
